@@ -13,14 +13,12 @@ void ADISolver::solve(int numSweeps)
 
 void ADISolver::sweepRows()
 {
-    // system to solve
-    // (Cpx + Cpy)*u_i,j + Cpw
+    // Tridiagonal System to setup and solve:
+    // (Cpx + Cpy)*u_{i,j} + Cpw*u_{i-1,j} + Cpe*u_{i+1,j} = f_i,j - Cpn*u_{i,j+1} - Cps*u_{i,j-1}
     std::vector<double> b(_nx);
     std::vector<double> a(_nx - 1), c(_nx - 1);
     std::vector<double> rhs(_nx);
 
-    // x_new(_nx + 2 * _nghostLayers, 0), y_new(_nx + 2 * _nghostLayers, 0);               // because we will do only x sweeps
-    // std::vector<double> b(IM, 0), RHSx(IM, 0), RHSy(IM, 0), x_new(IM, 0), y_new(IM, 0); // because we will do only x sweeps
     for (int j = 1; j < _ny - 1; ++j)
     {
         for (int i = 1; i < _nx - 1; ++i)
@@ -32,31 +30,18 @@ void ADISolver::sweepRows()
         }
 
         applyBoundaryConditionsRow(a, b, c, rhs, j);
-
-        // boundary 1
-        b[0] = 1;   // or _stencilField.center(0,j), its already 0 there
-        c[0] = 0;   // or _stencilField.east(0, j), its already 0 there
-        rhs[0] = 0; // _bcs.value(); // Dirichlet BC value for left boundary
-
-        // boundary 2
-        a[_nx - 2] = 0;   // or _stencilField.west(_nx - 1, j);, its already 0 there
-        b[_nx - 1] = 1;   // or _stencilField.center(_nx - 1,j), its already 0 there
-        rhs[_nx - 1] = 0; //_bcs.value(); // Dirichlet BC value for right boundary
-
         std::vector<double> urow = tridiagonalSolver(a, b, c, rhs);
-
         updateRow(urow, j);
     }
 }
 
 void ADISolver::applyBoundaryConditionsRow(std::vector<double> &a, std::vector<double> &b, std::vector<double> &c, std::vector<double> &rhs, int j)
 {
-    // only neumann for now..
+    // hardcoded dirhclet
     //  boundary 1
     b[0] = 1;
     c[0] = 0;
     rhs[0] = _bcs.value();
-    ;
 
     // boundary 2
     a[_nx - 2] = 0;
@@ -66,7 +51,7 @@ void ADISolver::applyBoundaryConditionsRow(std::vector<double> &a, std::vector<d
 
 void ADISolver::applyBoundaryConditionsColumn(std::vector<double> &a, std::vector<double> &b, std::vector<double> &c, std::vector<double> &rhs, int i)
 {
-    // only neumann for now..
+    // hardcoded dirhclet
     // boundary 1
     b[0] = 1;
     c[0] = 0;
@@ -80,7 +65,8 @@ void ADISolver::applyBoundaryConditionsColumn(std::vector<double> &a, std::vecto
 
 void ADISolver::sweepColumns()
 {
-    // system to solve
+    // Tridiagonal System to setup and solve:
+    // (Cpx + Cpy)*u_{i,j} + Cps*u_{i,j-1} + Cpn*u_{i,j+1} = f_i,j - Cpw*u_{i-1,j} - Cpe*u_{i+1,j}
     std::vector<double> b(_ny);
     std::vector<double> a(_ny - 1), c(_ny - 1);
     std::vector<double> rhs(_ny);
@@ -94,11 +80,9 @@ void ADISolver::sweepColumns()
             c[j] = _stencilField.north(i, j);
             rhs[j] = _f(i, j) - _stencilField.south(i, j) * _u(i + 1, j) - _stencilField.west(i, j) * _u(i - 1, j);
         }
-        // boundary 1
+
         applyBoundaryConditionsColumn(a, b, c, rhs, i);
-
         std::vector<double> urow = tridiagonalSolver(a, b, c, rhs);
-
         updateColumn(urow, i);
     }
 }
@@ -110,9 +94,7 @@ ScalarField &ADISolver::u()
 void ADISolver::updateRow(std::vector<double> urow, int j)
 {
     for (int i = 0; i < _nx; ++i)
-    {
         _u(i, j) = urow[i];
-    }
 }
 
 void ADISolver::updateColumn(std::vector<double> ucol, int i)
