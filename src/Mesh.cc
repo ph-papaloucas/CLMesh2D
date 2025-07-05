@@ -108,6 +108,12 @@ MeshRegion::MeshRegion(std::string name, std::array<int, 2> node0, std::array<in
     }
 }
 
+MeshRegion::MeshRegion(MeshRegion &&other)
+    : _name(std::move(other._name)), _nodes(std::move(other._nodes))
+{
+    // Move constructor, no need to do anything else
+}
+
 std::array<int, 2> MeshRegion::corner0() const
 {
     return _nodes[0];

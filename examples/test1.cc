@@ -38,10 +38,7 @@ int main()
     DirichletBC bc2(mesh, top, 22);
     DirichletBC bc3(mesh, left, 33);
     DirichletBC bc4(mesh, right, 44);
-    bc1.apply(rhs);
-    bc2.apply(rhs);
-    bc3.apply(rhs);
-    bc4.apply(rhs);
+
     std::cout << "rhs after applying boundary conditions\n";
     std::cout << rhs << std::endl;
 

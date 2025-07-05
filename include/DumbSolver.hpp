@@ -22,6 +22,7 @@ public:
         auto index = [this](int i, int j)
         { return j * _nx + i; };
 
+
         // Fill A and b
         for (int i = 0; i < _nx; ++i)
         {
