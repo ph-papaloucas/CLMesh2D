@@ -31,7 +31,6 @@ public:
     // other
     void applySourceFunction(ScalarFunction func);
 
-
 private:
     Mesh &_mesh;
     int _nx;

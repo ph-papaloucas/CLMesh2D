@@ -6,25 +6,21 @@
 class NeumannBC : public BoundaryCondition
 {
 public:
-    NeumannBC(Mesh &mesh, MeshRegion &region, double value)
-        : BoundaryCondition(mesh),
-          _region(region),
-          _value(value)
+    NeumannBC(Mesh &mesh, MeshRegion &region, ScalarFunction func)
+        : BoundaryCondition(mesh, region, func)
     {
-        chehckIfIsBoundaryRegion(_region);
+        checkIfIsBoundaryRegion(_region);
     }
 
-    void applyBCsToStencilField(ScalarField &u) const override
+    NeumannBC(Mesh &mesh, MeshRegion &region, double value)
+        : BoundaryCondition(mesh, region, [value](double, double)
+                            { return value; })
+    {
+        checkIfIsBoundaryRegion(_region);
+    }
+
+    void applyBCsToStencilField(StencilField &f) const override
     {
         std::cout << "test" << std::endl;
     }
-
-    double value() const
-    {
-        return _value;
-    }
-
-private:
-    const MeshRegion &_region;
-    double _value;
 };

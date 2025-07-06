@@ -31,10 +31,24 @@ int main()
     f.applySourceFunction(sourceEquation);
 
     // BCs
-    MeshRegion bottom("bottom", {0, 0}, {nx - 1, 0});
-    DirichletBC bc1(mesh, bottom, 0);
+    // prepare boundaries (this logic could be a static method in MeshRegion)
+    std::vector<std::array<int, 2>> boundaryNodes(2 * (nx + ny));
+    for (int i = 0; i < nx; ++i)
+    {
+        boundaryNodes[i] = {i, 0};           // bottom
+        boundaryNodes[i + nx] = {i, ny - 1}; // top
+    }
+    for (int j = 0; j < ny; ++j)
+    {
+        boundaryNodes[j + 2 * nx] = {0, j};           // left
+        boundaryNodes[j + 2 * nx + ny] = {nx - 1, j}; // right
+    }
+    MeshRegion boundaryRegion("boundary", mesh, boundaryNodes);
+    double dirichletValue = 0.0;                           // Dirichlet boundary condition value
+    DirichletBC bc1(mesh, boundaryRegion, dirichletValue); // Dirichlet BC with the solution function
+    BoundaryCollector bcs = BoundaryCollector::makeCollector(bc1);
 
-    ADISolver solver(phi, f, bc1);
+    ADISolver solver(phi, f, bcs);
     solver.solve(100);
 
     std::cout << "Calculated: \n"
@@ -49,7 +63,7 @@ int main()
               << solver.u() - solution << std::endl;
 
     // Dumb Solver
-    DumbSolver dumbSolver(phi, f, bc1);
+    DumbSolver dumbSolver(phi, f, bcs);
     dumbSolver.solve();
     std::cout << "Dumb Solver Result:\n"
               << dumbSolver.u() << std::endl;

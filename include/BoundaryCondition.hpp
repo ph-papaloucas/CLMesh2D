@@ -1,32 +1,44 @@
 #pragma once
 #include "ScalarField.hpp"
 #include "Mesh.hpp"
+#include "StencilField.hpp"
 
 class BoundaryCondition
 {
 public:
-    BoundaryCondition(Mesh &mesh, MeshRegion &region, ScalarFunction func) : _mesh(mesh), _region(region), _func(func) {}
+    BoundaryCondition(Mesh &mesh, MeshRegion &region, ScalarFunction func)
+        : _mesh(mesh), _region(region), _func(func) {}
 
-    virtual void applyBCsToStencilField(ScalarField &u) const = 0;
+    virtual void applyBCsToStencilField(StencilField &stencilField) const = 0;
 
-    void chehckIfIsBoundaryRegion(const MeshRegion &region) const
+    void applyBCsToSourceField(ScalarField &sourceField)
     {
-        int i0 = region.corner0()[0];
-        int j0 = region.corner0()[1];
-        int i1 = region.corner1()[0];
-        int j1 = region.corner1()[1];
-
-        bool same_i = (i0 == i1);
-        bool same_j = (j0 == j1);
-
-        if (same_i && !(i0 == 0 || i0 == _mesh.nx() - 1))
+        for (auto &node : _region.nodes())
         {
-            throw std::runtime_error("BoundaryRegion '" + region.name() + "' is aligned vertically but not on left/right boundary.");
+            int i = node[0];
+            int j = node[1];
+            sourceField(node[0], node[1]) = _func(_mesh.x(i, j), _mesh.y(i, j));
         }
-        if (same_j && !(j0 == 0 || j0 == _mesh.ny() - 1))
-        {
-            throw std::runtime_error("BoundaryRegion '" + region.name() + "' is aligned horizontally but not on top/bottom boundary.");
-        }
+    }
+
+    void checkIfIsBoundaryRegion(const MeshRegion &region) const
+    {
+        // int i0 = region.corner0()[0];
+        // int j0 = region.corner0()[1];
+        // int i1 = region.corner1()[0];
+        // int j1 = region.corner1()[1];
+
+        // bool same_i = (i0 == i1);
+        // bool same_j = (j0 == j1);
+
+        // if (same_i && !(i0 == 0 || i0 == _mesh.nx() - 1))
+        // {
+        //     throw std::runtime_error("BoundaryRegion '" + region.name() + "' is aligned vertically but not on left/right boundary.");
+        // }
+        // if (same_j && !(j0 == 0 || j0 == _mesh.ny() - 1))
+        // {
+        //     throw std::runtime_error("BoundaryRegion '" + region.name() + "' is aligned horizontally but not on top/bottom boundary.");
+        // }
     }
 
     const MeshRegion &region() const

@@ -1,7 +1,6 @@
 #pragma once
 #include "ScalarField.hpp"
-#include "StencilField.hpp"
-#include "DirichletBC.hpp"
+#include "BoundaryCollector.hpp"
 #include "StencilField.hpp"
 #include <vector>
 #include <cassert>
@@ -9,7 +8,7 @@
 class DumbSolver
 {
 public:
-    DumbSolver(ScalarField &u, ScalarField &f, DirichletBC &bcs)
+    DumbSolver(ScalarField &u, ScalarField &f, BoundaryCollector &bcs)
         : _u(u), _f(f), _bcs(bcs),
           _nx(u.nx()), _ny(u.ny()), _nghostLayers(u.nghostLayers()),
           _stencilField(u.mesh()) {}
@@ -33,7 +32,7 @@ public:
                 if (i == 0 || i == _nx - 1 || j == 0 || j == _ny - 1)
                 {
                     A[k][k] = 1.0;
-                    b[k] = _bcs.value();
+                    b[k] = _bcs.value(i,j);
                     continue;
                 }
 
@@ -62,7 +61,7 @@ public:
 private:
     ScalarField &_u;
     ScalarField &_f;
-    DirichletBC &_bcs;
+    BoundaryCollector &_bcs;
     StencilField _stencilField;
     int _nx, _ny, _nghostLayers;
 

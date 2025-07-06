@@ -13,6 +13,7 @@ file(GLOB_RECURSE SOURCES src/*.cc)
 # Find all example files
 file(GLOB EXAMPLES examples/*.cc)
 file (GLOB TESTS tests/*.cc)
+file(GLOB TEMP temp/*.cc)
 
 # Build an executable for each example
 foreach(example ${EXAMPLES})
@@ -23,4 +24,9 @@ endforeach()
 foreach (test ${TESTS})
     get_filename_component(test_name ${test} NAME_WE)
     add_executable(${test_name} ${test} ${SOURCES})
+endforeach()
+
+foreach (temp ${TEMP})
+    get_filename_component(temp_name ${temp} NAME_WE)
+    add_executable(${temp_name} ${temp} ${SOURCES})
 endforeach()

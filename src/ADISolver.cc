@@ -41,12 +41,12 @@ void ADISolver::applyBoundaryConditionsRow(std::vector<double> &a, std::vector<d
     //  boundary 1
     b[0] = 1;
     c[0] = 0;
-    rhs[0] = _bcs.value();
+    rhs[0] = _bcs.value(0, j);
 
     // boundary 2
     a[_nx - 2] = 0;
     b[_nx - 1] = 1;
-    rhs[_nx - 1] = _bcs.value();
+    rhs[_nx - 1] = _bcs.value(_nx - 1, j);
 }
 
 void ADISolver::applyBoundaryConditionsColumn(std::vector<double> &a, std::vector<double> &b, std::vector<double> &c, std::vector<double> &rhs, int i)
@@ -55,12 +55,12 @@ void ADISolver::applyBoundaryConditionsColumn(std::vector<double> &a, std::vecto
     // boundary 1
     b[0] = 1;
     c[0] = 0;
-    rhs[0] = _bcs.value();
+    rhs[0] = _bcs.value(i, 0);
 
     // boundary 2
     a[_ny - 2] = 0;
     b[_ny - 1] = 1;
-    rhs[_ny - 1] = _bcs.value();
+    rhs[_ny - 1] = _bcs.value(i, _ny - 1);
 }
 
 void ADISolver::sweepColumns()

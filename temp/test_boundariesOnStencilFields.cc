@@ -20,33 +20,34 @@ int main()
     double lengthX = nx - 1;                                       // M_PI;                                         // nx - 1; // 1D because ny = 1
     double lengthY = ny - 1;                                       // M_PI;                                         // ny - 1;
     Mesh mesh = Mesh::getOrthogonalMesh(nx, ny, lengthX, lengthY); // 1D because ny = 1
-   
-    // prepare boundaries
-    MeshRegion bottom("bottom", {0, 0}, {nx - 1, 0});
-    MeshRegion top("top", {0, ny - 1}, {nx - 1, ny - 1});
-    MeshRegion left("left", {0, 0}, {0, ny - 1});
-    MeshRegion right("right", {nx - 1, 0}, {nx - 1, ny - 1});
-    StencilField stencilField(mesh);
 
-    double dirichletValue = 0.0;
-    DirichletBC bc1(mesh, bottom, dirichletValue);
-    DirichletBC bc2(mesh, top, dirichletValue);
-    DirichletBC bc3(mesh, left, dirichletValue);
-    DirichletBC bc4(mesh, right, dirichletValue);
+    // Prepare MeshRegions (should find an easier way to do this)
+    MeshRegion topBoundaryRegion("top", mesh, {0, ny - 1}, {nx - 1, ny - 1});
+    std::vector<std::array<int, 2>> otherBoundaryNodes(2 * ny + nx);
+    for (int j = 0; j < ny; ++j)
+    {
+        otherBoundaryNodes[j] = {0, j};           // left
+        otherBoundaryNodes[j + ny] = {nx - 1, j}; // right
+    }
+    for (int i = 0; i < nx; ++i)
+    {
+        otherBoundaryNodes[i + 2 * ny] = {i, 0};
+    }
+    MeshRegion otherBoundaryRegions("otherBoundary", mesh, otherBoundaryNodes);
 
-
-    NeumannBC neumannBC1(mesh, left, 1.0);
-    DirichletBC dirichletBC1(mesh, right, 0.0);
-    
-    int i =0, j = 0;
+    // Prepare Boundary Conditions
+    // Collector could be hidden inside solver
+    DirichletBC dirichletBC1(mesh, topBoundaryRegion, 0.0);
+    NeumannBC neumannBC1(mesh, otherBoundaryRegions, 1.0);
     BoundaryCollector bcs = BoundaryCollector::makeCollector(neumannBC1, dirichletBC1);
-    bcs.applyBCsToStencilField(stencilField.center);
-    double test = bcs.value(i, j);
 
-    //BoundaryCollector bcs = BoundaryCollector::makeCollector(std::move(bc1), std::move(bc2), std::move(bc3), std::move(bc4));
+    // Prepare StencilField and rhs
+    StencilField stencilField(mesh);
+    ScalarField f(mesh, 0); // just a dummy source term
+    f.applySourceFunction([](double x, double y) { return 3; }); // just a dummy source term
 
-    BoundaryCollector bcs = BoundaryCollector::makeCollector(bc1, bc2, bc3, bc4);
-    bcs.applyBCsToStencilField(stencilField.center);
+    bcs.applyBCsToStencilField(stencilField); // this logic is handled internaly by the solver
+    bcs.applyBCsToSourceField(f);             // because e.g. ADI is implemented in a way that it needs to reconstruct the system a lot of times
 
     std::cout << "StencilField.center:\n"
               << stencilField.center << std::endl;
@@ -58,4 +59,6 @@ int main()
               << stencilField.north << std::endl;
     std::cout << "StencilField.south:\n"
               << stencilField.south << std::endl;
+    std::cout << "f:\n"
+              << f << std::endl;
 }

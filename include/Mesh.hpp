@@ -3,21 +3,6 @@
 #include <array>
 #include <string>
 #include <iostream>
-class MeshRegion
-{
-public:
-    MeshRegion(std::string name, std::array<int, 2> corner0, std::array<int, 2> corner1);
-
-    std::array<int, 2> corner0() const;
-    std::array<int, 2> corner1() const;
-
-    const std::string &name() const { return _name; }
-    std::vector<std::array<int, 2>> nodes() const { return _nodes; }
-
-private:
-    const std::string _name;
-    std::vector<std::array<int, 2>> _nodes;
-};
 
 class Mesh
 {
@@ -60,11 +45,31 @@ public:
         return dy;
     }
 
-    void addRegion(MeshRegion boundary);
-
 private:
     int _nx;
     int _ny;
-    std::vector<MeshRegion> _regions;
     std::vector<std::array<double, 2>> _coords; // flatten vector (_nx x _ny ), each element is an array<double, 2> (x, y)
+};
+
+class MeshRegion
+{
+public:
+    MeshRegion() = default;
+    MeshRegion(std::string name, Mesh &mesh, std::vector<std::array<int, 2>> nodes)
+        : _name(std::move(name)), _mesh(mesh), _nodes(std::move(nodes)) {}
+    MeshRegion(std::string name, const Mesh &mesh, std::vector<std::array<int, 2>> nodes)
+        : _name(std::move(name)), _mesh(mesh), _nodes(std::move(nodes)) {}
+    MeshRegion(std::string name, Mesh &mesh, std::array<int, 2> node0, std::array<int, 2> node1);
+
+    const std::string &name() const { return _name; }
+    std::vector<std::array<int, 2>> nodes() const { return _nodes; }
+
+    const Mesh &mesh() const { return _mesh; }
+
+
+private:
+    void sortNodes();
+    const std::string _name;
+    std::vector<std::array<int, 2>> _nodes;
+    const Mesh &_mesh;
 };

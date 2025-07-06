@@ -1,7 +1,7 @@
 #pragma once
 #include "ScalarField.hpp"
 #include "Mesh.hpp"
-#include "DirichletBC.hpp"
+#include "BoundaryCollector.hpp"
 #include "StencilField.hpp"
 
 std::vector<double> tridiagonalSolver(const std::vector<double> &a,
@@ -17,7 +17,7 @@ class ADISolver
 public:
     ADISolver(ScalarField &u,
               ScalarField &f,
-              DirichletBC &bcs)
+              BoundaryCollector &bcs)
         : _u(u), _f(f), _bcs(bcs), _nx(_u.nx()), _ny(_u.ny()), _nghostLayers(_u.nghostLayers()), _stencilField(_u.mesh()) {}
 
     void solve(int numSweeps = 1000);
@@ -40,10 +40,10 @@ public:
 
 private:
     ScalarField &_u;                  // not const, because we will apply boundary conditions on ghost cells
-    ScalarField &_f;                  // not const, because we will apply boundary conditions on ghost cells
+    const ScalarField &_f;            // not const, because we will apply boundary conditions on ghost cells
     const StencilField _stencilField; // holds the stencil for each cell
-    DirichletBC &_bcs;
-    int _nx;           // number of grid points in one direction (including ghost cells)
-    int _ny;           // number of grid points in the other direction (including ghost cells)
-    int _nghostLayers; // number of ghost layers
+    const BoundaryCollector &_bcs;
+    const int _nx;           // number of grid points in one direction (including ghost cells)
+    const int _ny;           // number of grid points in the other direction (including ghost cells)
+    const int _nghostLayers; // number of ghost layers
 };

@@ -44,7 +44,6 @@ double Mesh::y(int i, int j) const
     return _coords[i + j * _nx][1];
 }
 
-
 // void Mesh::addBoundaryRegion(MeshRegion boundary)
 // {
 //     // check if MeshRegion is on a boundary
@@ -68,22 +67,9 @@ double Mesh::y(int i, int j) const
 //     _boundaryRegions.push_back(boundary);
 // }
 
-#include <assert.h>
-void Mesh::addRegion(MeshRegion region)
-{
-    int imin = region.corner1()[0];
-    int imax = region.corner1()[0];
-    int jmin = region.corner1()[1];
-    int jmax = region.corner1()[1];
-
-    assert(imin >= 0 && imax < _nx && jmin >= 0 && jmax < _ny);
-
-    _regions.push_back(region);
-}
-
 #include <algorithm>
-MeshRegion::MeshRegion(std::string name, std::array<int, 2> node0, std::array<int, 2> node1)
-    : _name(std::move(name))
+MeshRegion::MeshRegion(std::string name, Mesh &mesh, std::array<int, 2> node0, std::array<int, 2> node1)
+    : _name(std::move(name)), _mesh(mesh)
 {
     // Extract i, j indices
     int i0 = node0[0];
@@ -108,18 +94,13 @@ MeshRegion::MeshRegion(std::string name, std::array<int, 2> node0, std::array<in
     }
 }
 
-MeshRegion::MeshRegion(MeshRegion &&other)
-    : _name(std::move(other._name)), _nodes(std::move(other._nodes))
-{
-    // Move constructor, no need to do anything else
-}
 
-std::array<int, 2> MeshRegion::corner0() const
+void MeshRegion::sortNodes()
 {
-    return _nodes[0];
-}
-
-std::array<int, 2> MeshRegion::corner1() const
-{
-    return _nodes.back();
+    // Sort nodes in ascending order (j outer, i inner)
+    std::sort(_nodes.begin(), _nodes.end(), [](const std::array<int, 2> &a, const std::array<int, 2> &b)
+              {
+        if (a[1] == b[1])
+            return a[0] < b[0];
+        return a[1] < b[1]; });
 }

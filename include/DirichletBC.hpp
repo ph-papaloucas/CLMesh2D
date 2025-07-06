@@ -9,7 +9,7 @@ public:
     DirichletBC(Mesh &mesh, MeshRegion &region, ScalarFunction func)
         : BoundaryCondition(mesh, region, func)
     {
-        chehckIfIsBoundaryRegion(_region);
+        checkIfIsBoundaryRegion(_region);
     }
 
     DirichletBC(Mesh &mesh, MeshRegion &region, double value)
@@ -17,11 +17,20 @@ public:
                             [value](double, double)
                             { return value; })
     {
-        chehckIfIsBoundaryRegion(_region);
+        checkIfIsBoundaryRegion(_region);
     }
 
-    void applyBCsToStencilField(ScalarField &u) const override
+    void applyBCsToStencilField(StencilField &stencilField) const
     {
-        std::cout << "test" << std::endl;
+        for (auto &node : _region.nodes())
+        {
+            int i = node[0];
+            int j = node[1];
+            stencilField.center(i, j) = 1.0;
+            // stencilField.east(i, j) = 0.0;
+            // stencilField.west(i, j) = 0.0;
+            // stencilField.north(i, j) = 0.0;
+            // stencilField.south(i, j) = 0.0;
+        }
     }
 };
